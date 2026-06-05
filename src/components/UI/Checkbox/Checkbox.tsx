@@ -16,7 +16,7 @@ export default function Checkbox(props: CheckboxProps) {
                 checked={props.checked}
                 onChange={handleChange}
             />
-            <div class="w-9 h-5 bg-secondary-20 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-accent rounded-full peer peer-checked:bg-accent peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+            <div class="w-9 h-5 bg-secondary-20 peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-accent rounded-full peer peer-checked:bg-accent peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-muted peer-checked:after:bg-background after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
         </label>
     );
 };

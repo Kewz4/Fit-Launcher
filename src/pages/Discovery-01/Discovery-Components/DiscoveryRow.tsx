@@ -167,7 +167,7 @@ export default function DiscoveryRow(props: DiscoveryRowProps) {
 
                                 <button
                                     onClick={handleGoToGame}
-                                    class="px-5 py-2 bg-accent hover:bg-accent/80 border border-primary/60 text-text text-sm rounded-full transition-all duration-250 hover:scale-105"
+                                    class="px-5 py-2 bg-accent hover:bg-accent/80 border border-primary/60 text-background text-sm rounded-full transition-all duration-250 hover:scale-105"
                                 >
                                     View Game
                                 </button>

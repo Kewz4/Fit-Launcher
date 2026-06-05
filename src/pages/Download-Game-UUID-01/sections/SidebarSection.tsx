@@ -104,8 +104,11 @@ export const SidebarSection = (props: SidebarSectionProps) => {
                             variant="bordered"
                         />
 
-                        {/* Direct Download with optional Fast badge */}
+                        {/* Direct Download with Recommended + optional Fast badges */}
                         <div class="relative w-full">
+                            <div class="absolute -top-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 bg-accent text-background text-[10px] font-bold uppercase rounded-sm shadow-md tracking-wider">
+                                ★ Recommended
+                            </div>
                             <Show when={props.hasDebridCached()}>
                                 <div class="absolute -top-2 -right-2 z-10 flex items-center gap-1 px-2 py-0.5 bg-emerald-500 text-text text-[10px] font-bold uppercase rounded-sm shadow-md tracking-wider">
                                     <Zap class="w-3 h-3" /> Fast
@@ -115,8 +118,8 @@ export const SidebarSection = (props: SidebarSectionProps) => {
                                 icon={<Globe class="w-4 h-4" />}
                                 label="Direct Download"
                                 onClick={() => handleDownloadPopup("direct_download")}
-                                class="w-full py-3 justify-center text-sm font-semibold uppercase tracking-wide border border-secondary-20 bg-secondary-20/50 hover:bg-secondary-20 hover:text-text transition-all"
-                                variant="bordered"
+                                class="w-full py-3 justify-center text-sm font-semibold uppercase tracking-wide"
+                                variant="solid"
                             />
                         </div>
                     </div>

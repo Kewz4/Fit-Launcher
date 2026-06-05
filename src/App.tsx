@@ -36,7 +36,7 @@ function App(props: { children: number | boolean | Node | JSX.ArrayElement | (st
 
     installerService.start();
 
-    await handleChangelog();
+    // changelog popup disabled
 
     try {
       await themeManager.applyStoredTheme();
