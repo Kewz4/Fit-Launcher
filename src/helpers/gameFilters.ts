@@ -1,5 +1,6 @@
 import { Game } from "../bindings";
 import { FilterState, SizeRange } from "../types/filters";
+export type { SortOption } from "../types/filters";
 
 /**
  * Parse size string (e.g., "15.2 GB", "800 MB") to bytes
@@ -146,21 +147,32 @@ function matchesSizeFilter(
  * Filter games based on filter state
  */
 export function filterGames(games: Game[], filters: FilterState): Game[] {
-  return games.filter((game) => {
-    const matchesGenre = matchesGenreFilter(game, filters.genres);
-    const matchesRepackSize = matchesSizeFilter(
-      game,
-      filters.repackSizeRange,
-      "repack"
-    );
-    const matchesOriginalSize = matchesSizeFilter(
-      game,
-      filters.originalSizeRange,
-      "original"
-    );
+  const needle = filters.search.trim().toLowerCase();
 
-    return matchesGenre && matchesRepackSize && matchesOriginalSize;
+  let result = games.filter((game) => {
+    const matchesGenre = matchesGenreFilter(game, filters.genres);
+    const matchesRepackSize = matchesSizeFilter(game, filters.repackSizeRange, "repack");
+    const matchesOriginalSize = matchesSizeFilter(game, filters.originalSizeRange, "original");
+    const matchesSearch = needle === "" || game.title.toLowerCase().includes(needle);
+    return matchesGenre && matchesRepackSize && matchesOriginalSize && matchesSearch;
   });
+
+  switch (filters.sort) {
+    case "name_asc":
+      result = result.slice().sort((a, b) => a.title.localeCompare(b.title));
+      break;
+    case "name_desc":
+      result = result.slice().sort((a, b) => b.title.localeCompare(a.title));
+      break;
+    case "size_asc":
+      result = result.slice().sort((a, b) => parseGameSize(a.details, "repack") - parseGameSize(b.details, "repack"));
+      break;
+    case "size_desc":
+      result = result.slice().sort((a, b) => parseGameSize(b.details, "repack") - parseGameSize(a.details, "repack"));
+      break;
+  }
+
+  return result;
 }
 
 /**
@@ -188,6 +200,8 @@ export function hasActiveFilters(filters: FilterState): boolean {
   return (
     filters.genres.length > 0 ||
     filters.repackSizeRange !== null ||
-    filters.originalSizeRange !== null
+    filters.originalSizeRange !== null ||
+    filters.search.trim() !== "" ||
+    filters.sort !== "default"
   );
 }

@@ -1,8 +1,8 @@
 import { createSignal, createMemo, Show, JSX, createComputed } from "solid-js";
-import { Filter, RotateCcw, ChevronLeft, ChevronRight, ChevronDown } from "lucide-solid";
+import { Filter, RotateCcw, ChevronLeft, ChevronRight, ChevronDown, Search, ArrowUpDown } from "lucide-solid";
 import MultiSelectDropdown from "../UI/MultiSelectDropdown/MultiSelectDropdown";
 import DualRangeSlider from "../UI/DualRangeSlider/DualRangeSlider";
-import { FilterState, DEFAULT_FILTER_STATE, SizeRange } from "../../types/filters";
+import { FilterState, DEFAULT_FILTER_STATE, SizeRange, SortOption } from "../../types/filters";
 import { formatBytesToSize, hasActiveFilters } from "../../helpers/gameFilters";
 
 export interface FilterBarProps {
@@ -87,8 +87,36 @@ export default function FilterBar(props: FilterBarProps) {
 
   return (
     <div class={`relative bg-background-70/80 backdrop-blur-sm border border-secondary-20/50 rounded-xl overflow-visible transition-all duration-300 z-30 ${props.class || ""}`}>
+      {/* Search + Sort row */}
+      <div class="flex items-center gap-2 px-4 pt-3 pb-2">
+        <div class="relative flex-1">
+          <Search size={14} class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search games..."
+            value={props.filters.search}
+            onInput={(e) => { updateFilters({ search: e.currentTarget.value }); }}
+            class="w-full pl-8 pr-3 py-1.5 text-sm bg-secondary-20/20 border border-secondary-20/40 rounded-lg text-text placeholder:text-muted focus:outline-none focus:border-accent/50 transition-colors"
+          />
+        </div>
+        <div class="relative flex items-center gap-1.5 px-3 py-1.5 bg-secondary-20/20 border border-secondary-20/40 rounded-lg cursor-pointer hover:border-accent/50 transition-colors">
+          <ArrowUpDown size={14} class="text-muted shrink-0" />
+          <select
+            value={props.filters.sort}
+            onChange={(e) => updateFilters({ sort: e.currentTarget.value as SortOption })}
+            class="text-sm bg-transparent text-text appearance-none cursor-pointer focus:outline-none pr-1"
+          >
+            <option value="default">Default</option>
+            <option value="name_asc">Name A→Z</option>
+            <option value="name_desc">Name Z→A</option>
+            <option value="size_asc">Size ↑</option>
+            <option value="size_desc">Size ↓</option>
+          </select>
+        </div>
+      </div>
+
       {/* Header */}
-      <div onClick={() => setIsExpanded(!isExpanded())} class="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-secondary-20/10 transition-colors cursor-pointer">
+      <div onClick={() => setIsExpanded(!isExpanded())} class="w-full flex items-center justify-between gap-3 px-4 py-2 hover:bg-secondary-20/10 transition-colors cursor-pointer border-t border-secondary-20/20">
         <div class="flex items-center gap-3">
           <div class="p-2 bg-accent/10 rounded-lg">
             <Filter size={18} class="text-accent" />
