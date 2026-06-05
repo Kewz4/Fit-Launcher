@@ -36,7 +36,7 @@ function AppInfoContent() {
             const tauriVersion = await getTauriVersion();
             const lastUpdated = String(await getGitHubReleaseInfo());
             setAppInfo({
-                name: "FitLauncher",
+                name: "GameHub Launcher",
                 version,
                 tauriVersion,
                 lastUpdated

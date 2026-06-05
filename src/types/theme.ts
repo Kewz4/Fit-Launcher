@@ -1,4 +1,5 @@
 export const defaultThemes = [
+  "Xbox Dark",
   "Blue Cyan",
   "Dark Purple",
   "Forest Dark Green",

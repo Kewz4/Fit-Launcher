@@ -1,5 +1,5 @@
 import { A, useNavigate } from "@solidjs/router";
-import { Compass, Download, Home, Library, Maximize2, Minimize2, Minus, Settings, X, ChevronLeft, ChevronRight } from "lucide-solid";
+import { Compass, Download, Home, Library, Settings, ChevronLeft, ChevronRight, X } from "lucide-solid";
 import { createMemo, createSignal, onMount, Show } from "solid-js";
 import Searchbar from "./Topbar-Components-01/Searchbar-01/Searchbar";
 import { listen, Event } from "@tauri-apps/api/event";
@@ -48,7 +48,7 @@ export default function Topbar() {
       }
       if (permissionGranted) {
         sendNotification({
-          title: "FitLauncher is running in the tray",
+          title: "GameHub Launcher is running in the tray",
           body: "The app was minimized to the system tray. You can change this behavior in Settings."
         });
       }
@@ -164,13 +164,16 @@ export default function Topbar() {
       class="w-full h-16 px-4 flex items-center justify-between bg-popup-background border-b border-secondary-20 select-none"
       data-tauri-drag-region
     >
-      {/* Logo + back/forward navigation */}
+      {/* K Logo + app name + back/forward navigation */}
       <div class="flex items-center gap-2" style="-webkit-app-region: no-drag;">
-        <img
-          src='/Square310x310Logo.png'
-          alt='fitgirl repack logo'
-          class="w-8 h-8 rounded-md object-cover"
-        />
+        {/* K brand icon */}
+        <div class="w-8 h-8 rounded-md bg-accent flex items-center justify-center flex-shrink-0 shadow-lg shadow-accent/30">
+          <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 4v16M5 12l9-8M5 12l9 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-background" />
+          </svg>
+        </div>
+        <span class="text-sm font-bold text-text hidden lg:block" style="-webkit-app-region: no-drag;">GameHub</span>
+        <div class="w-px h-5 bg-secondary-20 mx-1 hidden lg:block" />
         <button
           onClick={() => history.back()}
           title="Go back (Alt+←)"
@@ -254,44 +257,16 @@ export default function Topbar() {
         </A>
       </div>
 
-      {/* Left Section - Logo and Window Controls */}
-      <div class="flex items-center gap-6" style="-webkit-app-region: no-drag;">
-        {/* Window Controls */}
-        <div data-tauri-drag-region class="flex items-center gap-2">
-
-          <button
-            id="titlebar-minimize"
-            class="p-1.5 rounded-full text-muted hover:bg-secondary-20/30 hover:text-accent transition-colors"
-            title="Minimize"
-          >
-            <Minus size={16} />
-          </button>
-
-          <button
-            id="titlebar-maximize"
-            class="p-1.5 rounded-full text-muted hover:bg-secondary-20/30 hover:text-accent transition-colors"
-            onClick={handleMaximize}
-            title={
-              isFullscreen()
-                ? "Exit Fullscreen"
-                : isMaximized()
-                  ? "Restore Down"
-                  : "Maximize"
-            }
-          >
-            <Show when={isFullscreen() || isMaximized()} fallback={<Maximize2 size={16} />}>
-              <Minimize2 size={16} />
-            </Show>
-          </button>
-
-          <button
-            id="titlebar-close"
-            class="p-1.5 rounded-full text-muted hover:bg-red-500/20 hover:text-red-500 transition-colors"
-            title="Close"
-          >
-            <X size={16} />
-          </button>
-        </div>
+      {/* Right Section - close button only */}
+      <div class="flex items-center" style="-webkit-app-region: no-drag;">
+        <button
+          id="titlebar-close"
+          onClick={handleWindowClose}
+          class="p-2 rounded-md text-muted hover:bg-red-500/20 hover:text-red-400 transition-colors"
+          title="Close"
+        >
+          <X size={16} />
+        </button>
       </div>
     </div>
   );

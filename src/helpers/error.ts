@@ -39,7 +39,7 @@ export function resolveError(error: unknown): string {
 
 export async function showError(
   error: unknown,
-  title: string = "FitLauncher"
+  title: string = "GameHub Launcher"
 ): Promise<void> {
   const errorMessage = resolveError(error);
   await message(errorMessage, {

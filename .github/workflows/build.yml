@@ -1,0 +1,109 @@
+name: Build GameHub Launcher
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Create a GitHub release?'
+        required: false
+        default: 'false'
+        type: boolean
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    name: Build Windows EXE
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@1.91.1
+
+      - name: Cache Rust dependencies
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      # ---------- aria2c binary ----------
+      - name: Get latest aria2 release tag
+        id: get-aria2-tag
+        shell: bash
+        run: |
+          TAG=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/mokurin000/aria2c-windows-hide-console/releases/latest \
+            | jq -r '.tag_name')
+          TAG_VER=$(echo "$TAG" | sed 's/release-//')
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "tag_ver=${TAG_VER}" >> $GITHUB_OUTPUT
+
+      - name: Download aria2c zip
+        shell: bash
+        run: |
+          curl -L -o aria2.zip \
+            "https://github.com/mokurin000/aria2c-windows-hide-console/releases/download/${{ steps.get-aria2-tag.outputs.tag }}/aria2-${{ steps.get-aria2-tag.outputs.tag_ver }}-win-64bit-build1.zip"
+
+      - name: Extract aria2c.exe
+        shell: powershell
+        run: |
+          Expand-Archive -Path aria2.zip -DestinationPath aria2-extracted
+          $exePath = Get-ChildItem -Recurse aria2-extracted -Filter aria2c.exe | Select-Object -First 1 -ExpandProperty FullName
+          Move-Item $exePath ./src-tauri/binaries/aria2c-x86_64-pc-windows-msvc.exe -Force
+          Remove-Item aria2.zip -Force
+
+      # ---------- automation service binary ----------
+      - name: Build FitLauncherService automation binary
+        shell: powershell
+        run: |
+          Push-Location src-tauri
+          cargo build --release -p fit-launcher-automation
+          Move-Item -Force "target/release/FitLauncherService.exe" `
+            "binaries/FitLauncherService-x86_64-pc-windows-msvc.exe"
+          Pop-Location
+
+      # ---------- frontend ----------
+      - name: Install npm dependencies
+        run: npm ci
+
+      # ---------- Tauri build (no signing — produces portable exe + installer) ----------
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: add these secrets to your repo to enable installer signing
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: 'GameHub Launcher ${{ github.ref_name }}'
+          releaseBody: |
+            ## GameHub Launcher — by Kewz
+
+            See assets below to download the installer (`.msi`) or setup (`.exe`).
+          releaseDraft: ${{ github.event.inputs.release != 'true' }}
+          prerelease: false
+
+      # ---------- upload artifacts for manual runs ----------
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameHub-Launcher-windows
+          path: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: warn
+          retention-days: 14

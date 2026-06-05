@@ -111,7 +111,7 @@ function App(props: { children: number | boolean | Node | JSX.ArrayElement | (st
         );
         const confirmUpdate = await confirm(
           `Update "${update.version}" was found. Do you want to download it?`,
-          { title: 'FitLauncher', kind: 'info' }
+          { title: 'GameHub Launcher', kind: 'info' }
         );
 
         if (confirmUpdate) {

@@ -130,7 +130,7 @@ export class ThemeManagerApi {
 
       await message("Theme added successfully!", {
         kind: "info",
-        title: "FitLauncher",
+        title: "GameHub Launcher",
       });
     } catch (e) {
       console.error("Error adding theme:", e);
@@ -166,7 +166,7 @@ export class ThemeManagerApi {
       await remove(themePath);
       await message(`Theme "${themeName}" removed.`, {
         kind: "info",
-        title: "FitLauncher",
+        title: "GameHub Launcher",
       });
     } catch (err) {
       console.error("Failed to remove theme:", err);

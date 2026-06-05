@@ -73,8 +73,8 @@ function GlobalSettingsPage(props: { settingsPart: GlobalSettingsPart }): JSX.El
     // DNS changes require a restart to take effect
     if (selectedPart() === "dns") {
       const shouldRestart = await confirm(
-        "DNS settings require a restart to take effect.\nWould you like to restart FitLauncher now?",
-        { title: "FitLauncher", kind: "info" }
+        "DNS settings require a restart to take effect.\nWould you like to restart GameHub Launcher now?",
+        { title: "GameHub Launcher", kind: "info" }
       );
       if (shouldRestart) {
         await relaunch();
@@ -114,8 +114,8 @@ function GlobalSettingsPage(props: { settingsPart: GlobalSettingsPart }): JSX.El
       // DNS changes require a restart to take effect
       if (selectedPart() === "dns") {
         const shouldRestart = await confirm(
-          "DNS settings require a restart to take effect.\nWould you like to restart FitLauncher now?",
-          { title: "FitLauncher", kind: "info" }
+          "DNS settings require a restart to take effect.\nWould you like to restart GameHub Launcher now?",
+          { title: "GameHub Launcher", kind: "info" }
         );
         if (shouldRestart) {
           await relaunch();

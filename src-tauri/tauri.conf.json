@@ -30,10 +30,10 @@
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420/"
   },
-  "productName": "Fit Launcher",
-  "mainBinaryName": "Fit Launcher",
+  "productName": "GameHub Launcher",
+  "mainBinaryName": "GameHub Launcher",
   "version": "4.2.0",
-  "identifier": "com.fitlauncher.carrotrub",
+  "identifier": "com.gamehublauncher.kewz",
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ2OUMxMDA5RTMzOTk2MUIKUldRYmxqbmpDUkNjMWwxR1ZDbUg2dVFrclVlWmxoaG8ybXUvQituS3AwWEpxT1BxckViN2o2RTMK",
@@ -72,7 +72,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Fit Launcher",
+        "title": "GameHub Launcher",
         "minWidth": 1280,
         "minHeight": 720,
         "resizable": true,

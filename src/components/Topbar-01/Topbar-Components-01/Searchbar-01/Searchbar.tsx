@@ -244,8 +244,9 @@ export default function Searchbar(props: SearchbarProps) {
 
       {/* Error Message */}
       <Show when={indexError() !== null && !indexLoading()}>
-        <div class="absolute z-80 mt-2 w-full bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-sm text-red-400">
-          Search index unavailable: {indexError()}
+        <div class="absolute z-80 mt-2 w-full bg-secondary-20/20 border border-secondary-20 rounded-xl p-3 text-sm text-muted">
+          <p class="font-medium text-text mb-1">Search index not ready</p>
+          <p>Go to <span class="text-accent font-medium">Settings → Cache & Logs</span> and click <span class="text-accent font-medium">Rebuild Search Index</span>.</p>
         </div>
       </Show>
 

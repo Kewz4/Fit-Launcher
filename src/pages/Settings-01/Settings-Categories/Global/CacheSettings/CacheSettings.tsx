@@ -26,11 +26,12 @@ export default function CachePart(props: SettingsSectionProps<CacheSettings | nu
 
 function CacheContent(props: SettingsSectionProps<CacheSettings | null>) {
   const [updateClicked, setUpdateClicked] = createSignal<boolean>(false);
+  const [indexBuilding, setIndexBuilding] = createSignal<boolean>(false);
 
   async function handleClearCache() {
     const confirmation = await confirm(
       "This will reset game details and torrent session data. Search will still work. Are you sure?",
-      { title: "FitLauncher", kind: "warning" }
+      { title: "GameHub Launcher", kind: "warning" }
     );
 
     if (confirmation) {
@@ -42,12 +43,32 @@ function CacheContent(props: SettingsSectionProps<CacheSettings | null>) {
         // Clear scraped game data (keeps sitemap stubs for search)
         await commands.clearGameCache();
         await message("Cache cleared! Game details will be re-fetched when visited.", {
-          title: "FitLauncher",
+          title: "GameHub Launcher",
           kind: "info",
         });
       } catch (error: unknown) {
         await showError(error);
       }
+    }
+  }
+
+  async function handleRebuildSearchIndex() {
+    if (indexBuilding()) return;
+    setIndexBuilding(true);
+    try {
+      const res = await commands.rebuildSearchIndex();
+      if (res.status === "ok") {
+        await message("Search index rebuilt! You can now search for games.", {
+          title: "GameHub Launcher",
+          kind: "info",
+        });
+      } else {
+        await showError(res.error, "Search Index");
+      }
+    } catch (err) {
+      await showError(err, "Search Index");
+    } finally {
+      setIndexBuilding(false);
     }
   }
 
@@ -62,7 +83,7 @@ function CacheContent(props: SettingsSectionProps<CacheSettings | null>) {
   async function handleCheckUpdate() {
     if (updateClicked()) {
       await message("Can you please wait? That's quite not nice :(", {
-        title: "FitLauncher",
+        title: "GameHub Launcher",
         kind: "warning",
       });
       return;
@@ -75,7 +96,7 @@ function CacheContent(props: SettingsSectionProps<CacheSettings | null>) {
       console.log("update : ", update);
       if (!update) {
         await message(`No update found. You are on the latest version!`, {
-          title: "FitLauncher",
+          title: "GameHub Launcher",
           kind: "info",
         });
         return;
@@ -83,7 +104,7 @@ function CacheContent(props: SettingsSectionProps<CacheSettings | null>) {
 
       const wantsUpdate = await confirm(
         `Update "${update.version}" is available.\nDo you want to download and install it?`,
-        { title: "FitLauncher", kind: "info" }
+        { title: "GameHub Launcher", kind: "info" }
       );
 
       if (!wantsUpdate) return;
@@ -103,7 +124,7 @@ function CacheContent(props: SettingsSectionProps<CacheSettings | null>) {
       });
 
       await message("Update installed! Please restart the app.", {
-        title: "FitLauncher",
+        title: "GameHub Launcher",
         kind: "info",
       });
     } catch (err) {
@@ -130,8 +151,15 @@ function CacheContent(props: SettingsSectionProps<CacheSettings | null>) {
         disabled={false}
       />
 
+      <LabelButtonSettings text="Rebuild Search Index"
+        typeText="Downloads the game list from FitGirl Repacks and rebuilds the search database. Run this if search isn't working (takes ~30 seconds)."
+        action={handleRebuildSearchIndex}
+        buttonLabel={indexBuilding() ? "Building..." : "Rebuild"}
+        disabled={indexBuilding()}
+      />
+
       <LabelButtonSettings text="Go To Logs"
-        typeText="Please do not share this with anyone except FitLauncher's moderation team!"
+        typeText="Please do not share this with anyone except GameHub Launcher's support team!"
         action={handleGoToLogs}
         buttonLabel="Go!"
         disabled={false}
