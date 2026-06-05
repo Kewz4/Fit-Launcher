@@ -14,6 +14,8 @@ import {
 
 type JobCallback = (job: Job) => void;
 type RemovedCallback = (id: string) => void;
+type ErrorCallback = (msg: string) => void;
+type ReadyCallback = () => void;
 
 export class GlobalDownloadManager {
   private jobs = new Map<string, Job>();
@@ -21,6 +23,11 @@ export class GlobalDownloadManager {
   private updatedCbs: Set<JobCallback> = new Set();
   private completedCbs: Set<JobCallback> = new Set();
   private removedCbs: Set<RemovedCallback> = new Set();
+  private errorCbs: Set<ErrorCallback> = new Set();
+  private readyCbs: Set<ReadyCallback> = new Set();
+
+  private unlistenError: UnlistenFn | null = null;
+  private unlistenReady: UnlistenFn | null = null;
 
   private pendingUpdates = new Map<string, Job>();
   private flushScheduled = false;
@@ -103,6 +110,27 @@ export class GlobalDownloadManager {
             console.error("Error in job removed callback:", err);
           }
         });
+      });
+    }
+
+    if (!this.unlistenError) {
+      this.unlistenError = await listen<string>("download::error", (e) => {
+        const msg = e.payload ?? "Unknown download error";
+        this.errorCbs.forEach((cb) => { try { cb(msg); } catch {} });
+      });
+    }
+
+    if (!this.unlistenReady) {
+      this.unlistenReady = await listen("manager_ready", async () => {
+        try {
+          const resAll = await commands.dmAllJobs();
+          if (resAll.status === "ok" && Array.isArray(resAll.data)) {
+            for (const j of resAll.data) {
+              if (j?.id) this.jobs.set(j.id, j);
+            }
+          }
+        } catch {}
+        this.readyCbs.forEach((cb) => { try { cb(); } catch {} });
       });
     }
 
@@ -344,6 +372,16 @@ export class GlobalDownloadManager {
     return () => this.completedCbs.delete(cb);
   }
 
+  onError(cb: ErrorCallback) {
+    this.errorCbs.add(cb);
+    return () => this.errorCbs.delete(cb);
+  }
+
+  onReady(cb: ReadyCallback) {
+    this.readyCbs.add(cb);
+    return () => this.readyCbs.delete(cb);
+  }
+
   async teardown() {
     if (this.flushTimer !== null) {
       clearTimeout(this.flushTimer);
@@ -363,9 +401,14 @@ export class GlobalDownloadManager {
       this.unlistenCompleted = null;
     }
 
+    if (this.unlistenError) { this.unlistenError(); this.unlistenError = null; }
+    if (this.unlistenReady) { this.unlistenReady(); this.unlistenReady = null; }
+
     this.updatedCbs.clear();
     this.removedCbs.clear();
     this.completedCbs.clear();
+    this.errorCbs.clear();
+    this.readyCbs.clear();
 
     this.jobs.clear();
     this.pendingUpdates.clear();

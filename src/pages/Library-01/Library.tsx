@@ -136,12 +136,12 @@ function Library() {
   }
 
   return (
-    <div class="library flex bg-gradient-to-br from-background to-background-70 text-text h-full">
+    <div class="library flex bg-background text-text h-full">
       {/* Sidebar */}
       <div class="w-72  bg-popup-background/95 backdrop-blur-sm border-r border-secondary-30 p-5 flex flex-col space-y-5 ">
         <div class="flex items-center space-x-3 mb-6 px-2">
           <LibraryBig class="w-6 h-6 text-accent" />
-          <h2 class="text-xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent font-titles">
+          <h2 class="text-xl font-bold text-text font-titles">
             Game Library
           </h2>
         </div>

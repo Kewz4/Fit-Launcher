@@ -3,33 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fit Launcher</title>
+  <title>GameHub Launcher</title>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body, html {
-      margin: 0;
-      padding: 0;
       width: 100%;
       height: 100%;
-      background: transparent;
+      background: #000;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #fff;
     }
-    .logo {
-      width: 400px;
-      height: 400px;
-      background: url('./Square310x310Logo.png') no-repeat center center;
-      background-size: contain;
-      animation: spin 4s linear infinite;
+
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      animation: fadeIn 0.6s ease-out;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+
+    .k-badge {
+      width: 96px;
+      height: 96px;
+      background: #fff;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .k-badge svg {
+      width: 56px;
+      height: 56px;
+    }
+
+    .label {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.06em;
+      margin-top: -18px;
+    }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .dot {
+      width: 5px;
+      height: 5px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 50%;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes pulse {
+      0%, 100% { background: rgba(255,255,255,0.15); }
+      50% { background: rgba(255,255,255,0.7); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="logo"></div>
+  <div class="logo-wrap">
+    <div class="k-badge">
+      <!-- K lettermark in black on white -->
+      <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 8v40M14 28l16-20M14 28l16 20" stroke="#000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="label">GameHub Launcher</span>
+    <span class="sub">by Kewz</span>
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
 </body>
 </html>

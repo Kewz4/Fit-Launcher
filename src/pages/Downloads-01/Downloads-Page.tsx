@@ -1,14 +1,16 @@
-import { Component, createMemo, createSignal, Show } from "solid-js";
-import { CloudDownload, Funnel, Magnet, DownloadCloud, Zap, Trash2, ArrowDown, ArrowUp, Activity, PauseCircle, PlayCircle, CheckSquare, HardDrive, ChevronsUpDown } from "lucide-solid";
+import { Component, createMemo, createSignal, Show, For, onMount, onCleanup } from "solid-js";
+import { CloudDownload, Funnel, Magnet, DownloadCloud, Zap, Trash2, ArrowDown, ArrowUp, Activity, PauseCircle, PlayCircle, CheckSquare, HardDrive, ChevronsUpDown, AlertTriangle, X } from "lucide-solid";
 import Button from "../../components/UI/Button/Button";
 import { useNavigate } from "@solidjs/router";
 import InstallQueueStatus from "../../components/InstallQueue/QueueStatus";
 import DownloadList from "./Downloads-List";
 import { formatSpeed, formatBytes } from "../../helpers/format";
 import { DM } from "../../api/manager/api";
-import { AggregatedStatus, DownloadSource } from "../../bindings";
+import { DownloadSource } from "../../bindings";
 import { DownloadsStore } from "../../stores/download";
 import { GlobalStatsStore } from "../../stores/globalStats";
+import { ManagerStatusStore, isDiskSpaceError } from "../../stores/managerStatus";
+import { message } from "@tauri-apps/plugin-dialog";
 
 type FilterType = DownloadSource | "All" | "Active";
 type SortType = "none" | "name" | "progress_asc" | "progress_desc" | "size_desc";
@@ -19,6 +21,19 @@ const DownloadPage: Component = () => {
     const [sortType, setSortType] = createSignal<SortType>("none");
     const [showSortMenu, setShowSortMenu] = createSignal(false);
     const { jobs } = DownloadsStore;
+    const { errors, dismissError } = ManagerStatusStore;
+
+    onMount(() => {
+        const unsub = DM.onError(async (msg) => {
+            if (isDiskSpaceError(msg)) {
+                await message(
+                    "Not enough disk space to continue this download.\n\nFree up space on your drive and try again.",
+                    { title: "Not Enough Space", kind: "error" }
+                );
+            }
+        });
+        onCleanup(unsub);
+    });
 
     const filteredItems = createMemo(() => {
         const f = activeFilter();
@@ -93,14 +108,14 @@ const DownloadPage: Component = () => {
 
 
     return (
-        <div class="min-h-screen bg-gradient-to-br from-background to-background-950 p-4 w-full">
+        <div class="min-h-screen bg-background p-4 w-full">
             <div class="max-w-[1800px] mx-auto mb-8">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                     <h1 class="text-3xl font-bold flex items-center gap-3">
                         <div class="p-2 rounded-xl bg-accent/10 border border-accent/20 backdrop-blur-sm">
                             <CloudDownload class="w-6 h-6 text-accent animate-pulse" />
                         </div>
-                        <span class="bg-gradient-to-r from-accent via-primary to-secondary bg-clip-text text-transparent">DOWNLOAD MANAGER</span>
+                        <span class="text-text tracking-widest">DOWNLOAD MANAGER</span>
                     </h1>
 
                     <div class="flex flex-wrap gap-3 w-full md:w-auto items-center">
@@ -247,6 +262,31 @@ const DownloadPage: Component = () => {
                     </Show>
                 </div>
 
+                {/* Error notifications */}
+                <Show when={errors().length > 0}>
+                    <div class="space-y-2 mb-4">
+                        <For each={errors()}>
+                            {(err) => (
+                                <div class={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm ${
+                                    err.isDiskSpace
+                                        ? "bg-error/10 border-error/40 text-text"
+                                        : "bg-secondary-20/20 border-secondary-20 text-muted"
+                                }`}>
+                                    <AlertTriangle class={`w-4 h-4 mt-0.5 flex-shrink-0 ${err.isDiskSpace ? "text-error" : "text-warning-orange"}`} />
+                                    <span class="flex-1">
+                                        {err.isDiskSpace
+                                            ? "Not enough disk space — free up space and retry the download."
+                                            : err.message}
+                                    </span>
+                                    <button onClick={() => dismissError(err.id)} class="text-muted hover:text-text transition-colors">
+                                        <X class="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
+                        </For>
+                    </div>
+                </Show>
+
                 {/* Installation Queue Status */}
                 <div class="mt-4">
                     <InstallQueueStatus />
@@ -268,7 +308,7 @@ const DownloadPage: Component = () => {
                             <div class="absolute inset-0 bg-accent/10 rounded-full animate-ping opacity-20"></div>
                             <CloudDownload class="w-20 h-20 text-accent animate-bounce" />
                         </div>
-                        <h3 class="text-3xl font-bold mb-3 bg-gradient-to-r from-text to-primary bg-clip-text text-transparent">Ready for Downloads!</h3>
+                        <h3 class="text-3xl font-bold mb-3 text-text">Ready for Downloads!</h3>
                         <p class="text-muted/80 max-w-md mb-8 text-lg">Your download queue is empty. Let's find some awesome games!</p>
                         <Button label="Explore Game Library" icon={<></>} onClick={() => navigate("/discovery-page")} class="text-lg py-3 px-6 hover:scale-105 transition-transform" variant="glass" />
                     </div>

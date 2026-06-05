@@ -375,10 +375,10 @@ const DownloadItem: Component<{ item: Accessor<Job>; refreshDownloads?: () => Pr
                             >
                                 <div
                                     class={`h-full transition-all duration-500 ease-out ${installState() === "failed"
-                                        ? "bg-gradient-to-r from-red-500 to-red-400"
+                                        ? "bg-error"
                                         : installState() === "installing"
-                                            ? "bg-gradient-to-r from-accent to-primary/80 animate-pulse"
-                                            : "bg-gradient-to-r from-accent to-primary/80"
+                                            ? "bg-accent animate-pulse"
+                                            : "bg-accent"
                                         }`}
                                     style={{ width: `${props.item().source === "Ddl" ? progressPercentage() : jobStatus()?.progress_percentage.toFixed(1)}%` }}
                                 />

@@ -1,5 +1,5 @@
 import { A, useNavigate } from "@solidjs/router";
-import { Compass, Download, Home, Library, Settings, ChevronLeft, ChevronRight, X } from "lucide-solid";
+import { Compass, Download, Home, Library, Settings, ChevronLeft, ChevronRight, X, Minus, Square } from "lucide-solid";
 import { createMemo, createSignal, onMount, Show } from "solid-js";
 import Searchbar from "./Topbar-Components-01/Searchbar-01/Searchbar";
 import { listen, Event } from "@tauri-apps/api/event";
@@ -257,15 +257,30 @@ export default function Topbar() {
         </A>
       </div>
 
-      {/* Right Section - close button only */}
-      <div class="flex items-center" style="-webkit-app-region: no-drag;">
+      {/* Window controls */}
+      <div class="flex items-center gap-1 ml-2" style="-webkit-app-region: no-drag;">
+        <button
+          id="titlebar-minimize"
+          class="p-1.5 rounded text-muted hover:text-text hover:bg-secondary-20/40 transition-colors"
+          title="Minimize"
+        >
+          <Minus size={14} />
+        </button>
+        <button
+          id="titlebar-maximize"
+          onClick={handleMaximize}
+          class="p-1.5 rounded text-muted hover:text-text hover:bg-secondary-20/40 transition-colors"
+          title={isMaximized() ? "Restore" : "Maximize"}
+        >
+          <Square size={13} />
+        </button>
         <button
           id="titlebar-close"
           onClick={handleWindowClose}
-          class="p-2 rounded-md text-muted hover:bg-red-500/20 hover:text-red-400 transition-colors"
+          class="p-1.5 rounded text-muted hover:text-red-400 hover:bg-red-500/15 transition-colors"
           title="Close"
         >
-          <X size={16} />
+          <X size={14} />
         </button>
       </div>
     </div>

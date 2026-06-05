@@ -38,6 +38,8 @@ jobs:
         uses: swatinem/rust-cache@v2
         with:
           workspaces: './src-tauri -> target'
+          cache-on-failure: true
+          shared-key: "gamehub-windows"
 
       # ---------- aria2c binary ----------
       - name: Get latest aria2 release tag
