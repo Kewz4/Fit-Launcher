@@ -1,4 +1,4 @@
-import { createSignal, onMount, For, Show } from "solid-js";
+import { createMemo, createSignal, onMount, For, Show } from "solid-js";
 import { showError } from "../../helpers/error";
 import CollectionList from './CollectionList/CollectionList';
 import GameDownloadedItem, { LayoutType } from "./GameDownloadedItem/GameDownloadedItem";
@@ -16,6 +16,7 @@ import { LibraryApi } from "../../api/library/api";
 import { DownloadedGame, Game } from "../../bindings";
 import createAddLocalGamePopup from "../../Pop-Ups/Add-Local-Game-PopUp/Add-Local-Game-PopUp";
 import createBasicTextInputPopup from "../../Pop-Ups/Basic-TextInput-PopUp/Basic-TextInput-PopUp";
+import { Search } from "lucide-solid";
 
 const libraryAPI = new LibraryApi();
 
@@ -23,6 +24,13 @@ function Library() {
   const [collectionList, setCollectionList] = createSignal<Record<string, Game[]>>({});
   const [downloadedGamesList, setDownloadedGamesList] = createSignal<DownloadedGame[]>([]);
   const [layoutType, setLayoutType] = createSignal<LayoutType>("column");
+  const [searchQuery, setSearchQuery] = createSignal("");
+
+  const filteredDownloadedGames = createMemo(() => {
+    const q = searchQuery().toLowerCase().trim();
+    if (!q) return downloadedGamesList();
+    return downloadedGamesList().filter(g => g.title.toLowerCase().includes(q));
+  });
 
   onMount(async () => {
     try {
@@ -213,9 +221,24 @@ function Library() {
               />
             </div>
           </div>
-          <div class="flex items-center space-x-2 font-titles">
-            <Gamepad2 class="w-5 h-5 text-primary" />
-            <h2 class="font-medium">My Games</h2>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center space-x-2 font-titles">
+              <Gamepad2 class="w-5 h-5 text-primary" />
+              <h2 class="font-medium">My Games</h2>
+              <span class="text-xs bg-secondary-20 px-2 py-0.5 rounded-full text-muted">
+                {downloadedGamesList().length}
+              </span>
+            </div>
+            <div class="relative">
+              <Search class="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted/60 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search games..."
+                value={searchQuery()}
+                onInput={e => setSearchQuery(e.currentTarget.value)}
+                class="pl-8 pr-3 py-1.5 text-sm bg-secondary-20/20 border border-secondary-20/40 rounded-lg text-text placeholder:text-muted/50 focus:outline-none focus:border-accent/50 w-48 transition-all focus:w-64"
+              />
+            </div>
           </div>
           <Button label="Add Game" icon={<FolderPlus class="w-4 h-4 group-hover:text-accent transition-colors" />} onClick={handleAddLocalGame} variant="bordered" size="sm" />
         </div>
@@ -223,10 +246,16 @@ function Library() {
 
         {/* Downloaded Games List */}
         <div class="flex-1 overflow-y-auto p-8 no-scrollbar h-full">
-          {collectionList()["downloaded_games"]?.length > 0 ? (
+          {collectionList()["downloaded_games"]?.length > 0 && filteredDownloadedGames().length === 0 ? (
+            <div class="flex flex-col items-center justify-center h-48 text-muted/60">
+              <Search class="w-10 h-10 opacity-30 mb-3" />
+              <p class="text-sm">No games match "{searchQuery()}"</p>
+              <button onClick={() => setSearchQuery("")} class="mt-2 text-xs text-accent hover:underline">Clear search</button>
+            </div>
+          ) : collectionList()["downloaded_games"]?.length > 0 ? (
             <div>
               <GameDownloadedItem
-                downloadedGamesList={downloadedGamesList}
+                downloadedGamesList={filteredDownloadedGames}
                 onGameInfoUpdate={(title, info) => {
                   setDownloadedGamesList(prev =>
                     prev.map(g => g.title === title ? { ...g, executable_info: info } : g)

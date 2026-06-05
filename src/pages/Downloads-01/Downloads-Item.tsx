@@ -1,10 +1,11 @@
 import { Component, createMemo, createSignal, Show, onMount, onCleanup, Accessor, createEffect } from "solid-js";
-import { HardDrive, ArrowDown, ArrowUp, ChevronUp, ChevronDown, Folder, Pause, Play, Settings, Trash2, RefreshCw, AlertTriangle } from "lucide-solid";
+import { HardDrive, ArrowDown, ArrowUp, ChevronUp, ChevronDown, Folder, Pause, Play, Settings, Trash2, RefreshCw, AlertTriangle, Copy, FolderOpen, Clock } from "lucide-solid";
 import { InstallationApi } from "../../api/installation/api";
 import { installerService } from "../../api/installer/api";
 import { listen } from "@tauri-apps/api/event";
+import { open } from "@tauri-apps/plugin-shell";
 
-import { formatBytes, formatSpeed } from "../../helpers/format";
+import { formatBytes, formatSpeed, formatETA, toNumber } from "../../helpers/format";
 import Button from "../../components/UI/Button/Button";
 import DownloadFiles from "./Download-Files";
 import { AggregatedStatus, File, Job } from "../../bindings";
@@ -231,6 +232,38 @@ const DownloadItem: Component<{ item: Accessor<Job>; refreshDownloads?: () => Pr
         return Math.min((completed / total) * 100, 100).toFixed(1);
     };
 
+    const eta = createMemo(() => {
+        const status = jobStatus();
+        if (!status) return "--";
+        const speed = toNumber(status.download_speed);
+        const remaining = (status.total_length ?? 0) - (status.completed_length ?? 0);
+        return formatETA(remaining, speed);
+    });
+
+    async function copyTitleToClipboard() {
+        try {
+            await navigator.clipboard.writeText(props.item().game.title);
+            notify("Title copied to clipboard", { type: "success", role: "status", duration: 2000 });
+        } catch {
+            notify("Failed to copy title", { type: "error", role: "alert", duration: 2000 });
+        }
+    }
+
+    async function openJobFolder() {
+        try {
+            await open(props.item().metadata.target_path);
+        } catch {
+            notify("Could not open folder", { type: "error", role: "alert", duration: 2000 });
+        }
+    }
+
+    async function confirmAndRemove() {
+        const confirmed = await import("@tauri-apps/plugin-dialog").then(m =>
+            m.confirm(`Remove "${props.item().game.title}" from downloads?`, { title: "Remove Download", kind: "warning" })
+        ).catch(() => window.confirm(`Remove "${props.item().game.title}" from downloads?`));
+        if (confirmed) await removeDownload();
+    }
+
     return (
         <div class="bg-popup rounded-xl border border-secondary-20/60 hover:border-accent/40 transition-all overflow-hidden group">
             <div class="flex flex-col md:flex-row h-full">
@@ -249,18 +282,33 @@ const DownloadItem: Component<{ item: Accessor<Job>; refreshDownloads?: () => Pr
                         class="w-16 h-16 rounded-lg object-cover mt-5 mr-4 border border-secondary-20/30 group-hover:border-accent/30 transition-colors"
                     />
                     <div class="flex-1 min-w-0 mt-5">
-                        <h3 class="font-medium line-clamp-2 text-text group-hover:text-primary transition-colors">
-                            {props.item().game.title}
-                        </h3>
-                        <div class="flex items-center gap-2 mt-1 text-sm text-muted/80">
-                            <HardDrive class="w-4 h-4 opacity-70" />
-
-                            <span>
-                                {
-                                    props.item().source === "Ddl"
+                        <div class="flex items-center gap-1">
+                            <h3 class="font-medium line-clamp-2 text-text group-hover:text-primary transition-colors">
+                                {props.item().game.title}
+                            </h3>
+                            <button
+                                title="Copy game title"
+                                onClick={copyTitleToClipboard}
+                                class="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity p-1 rounded text-muted hover:text-accent"
+                            >
+                                <Copy class="w-3 h-3" />
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-3 mt-1 text-sm text-muted/80 flex-wrap">
+                            <div class="flex items-center gap-1">
+                                <HardDrive class="w-4 h-4 opacity-70" />
+                                <span>
+                                    {props.item().source === "Ddl"
                                         ? formatBytes(ddlTotalSize())
                                         : formatBytes(jobStatus()?.total_length)}
-                            </span>
+                                </span>
+                            </div>
+                            <Show when={props.item().state === "active"}>
+                                <div class="flex items-center gap-1">
+                                    <Clock class="w-3 h-3 opacity-70" />
+                                    <span class="text-xs">{eta()}</span>
+                                </div>
+                            </Show>
                         </div>
                     </div>
                 </div>
@@ -321,7 +369,10 @@ const DownloadItem: Component<{ item: Accessor<Job>; refreshDownloads?: () => Pr
                                 </span>
                                 <span class="font-medium text-text">{props.item().source === "Ddl" ? progressPercentage() : jobStatus()?.progress_percentage.toFixed(1)}%</span>
                             </div>
-                            <div class="w-full h-2 bg-secondary-20/30 rounded-full overflow-hidden">
+                            <div
+                                class="w-full h-2 bg-secondary-20/30 rounded-full overflow-hidden cursor-default"
+                                title={`${formatBytes(completedLength())} / ${formatBytes(ddlTotalSize())} downloaded`}
+                            >
                                 <div
                                     class={`h-full transition-all duration-500 ease-out ${installState() === "failed"
                                         ? "bg-gradient-to-r from-red-500 to-red-400"
@@ -359,9 +410,20 @@ const DownloadItem: Component<{ item: Accessor<Job>; refreshDownloads?: () => Pr
                                 class="hover:bg-secondary-20/30"
                             />
 
+                            <Show when={props.item().state === "complete"}>
+                                <Button
+                                    variant="glass"
+                                    size="sm"
+                                    onClick={openJobFolder}
+                                    icon={<FolderOpen class="w-4 h-4 text-accent" />}
+                                    title="Open download folder"
+                                    class="hover:bg-accent/10"
+                                />
+                            </Show>
+
                             <Button
                                 variant="bordered"
-                                onClick={removeDownload}
+                                onClick={confirmAndRemove}
                                 icon={<Trash2 class="w-5 h-5 text-red-400" />}
                                 class="hover:bg-red-500/10 !border-red-400/30 !hover:border-red-400/80"
                             />

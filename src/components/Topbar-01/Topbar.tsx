@@ -1,6 +1,6 @@
-import { A } from "@solidjs/router";
-import { Compass, Download, Home, Library, Maximize2, Minimize2, Minus, Settings, X } from "lucide-solid";
-import { createSignal, onMount, Show } from "solid-js";
+import { A, useNavigate } from "@solidjs/router";
+import { Compass, Download, Home, Library, Maximize2, Minimize2, Minus, Settings, X, ChevronLeft, ChevronRight } from "lucide-solid";
+import { createMemo, createSignal, onMount, Show } from "solid-js";
 import Searchbar from "./Topbar-Components-01/Searchbar-01/Searchbar";
 import { listen, Event } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -9,14 +9,29 @@ import createBasicChoicePopup from "../../Pop-Ups/Basic-Choice-PopUp/Basic-Choic
 import { GlobalSettingsApi } from "../../api/settings/api";
 import { commands } from "../../bindings";
 import { routeHistory } from "../../stores/routeStore";
+import { DownloadsStore } from "../../stores/download";
+import { GlobalStatsStore } from "../../stores/globalStats";
+import { formatSpeed } from "../../helpers/format";
 
 export default function Topbar() {
   const [isMaximized, setIsMaximized] = createSignal(false);
   const [isFullscreen, setIsFullscreen] = createSignal(false);
+  const navigate = useNavigate();
+  const { jobs } = DownloadsStore;
 
   const isActive = (path: string) => {
     return routeHistory.at(-1) === path;
   };
+
+  const activeDownloadCount = createMemo(() =>
+    jobs().filter(j => j.state === "active" || j.state === "installing" || j.state === "waiting").length
+  );
+
+  const downloadSpeed = createMemo(() => {
+    const speed = GlobalStatsStore.stats()?.downloadSpeed;
+    if (!speed || speed === "0") return null;
+    return formatSpeed(speed);
+  });
 
   const appWindow = getCurrentWebviewWindow();
 
@@ -111,6 +126,20 @@ export default function Topbar() {
         e.preventDefault();
         await toggleFullscreen();
       }
+      // Alt+1–5 navigation shortcuts
+      if (e.altKey && !e.ctrlKey && !e.shiftKey) {
+        const shortcuts: Record<string, string> = {
+          "1": "/",
+          "2": "/discovery-page",
+          "3": "/library",
+          "4": "/downloads-page",
+          "5": "/settings",
+        };
+        if (shortcuts[e.key]) {
+          e.preventDefault();
+          navigate(shortcuts[e.key]);
+        }
+      }
     });
 
     document.getElementById('titlebar-minimize')?.addEventListener('click', () => appWindow.minimize());
@@ -135,17 +164,38 @@ export default function Topbar() {
       class="w-full h-16 px-4 flex items-center justify-between bg-popup-background border-b border-secondary-20 select-none"
       data-tauri-drag-region
     >
-      {/* Logo */}
-      <img
-        src='/Square310x310Logo.png'
-        alt='fitgirl repack logo'
-        class="w-8 h-8 rounded-md object-cover"
-        style="-webkit-app-region: no-drag;"
-      />
+      {/* Logo + back/forward navigation */}
+      <div class="flex items-center gap-2" style="-webkit-app-region: no-drag;">
+        <img
+          src='/Square310x310Logo.png'
+          alt='fitgirl repack logo'
+          class="w-8 h-8 rounded-md object-cover"
+        />
+        <button
+          onClick={() => history.back()}
+          title="Go back (Alt+←)"
+          class="p-1.5 rounded-full text-muted hover:bg-secondary-20/30 hover:text-accent transition-colors"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <button
+          onClick={() => history.forward()}
+          title="Go forward (Alt+→)"
+          class="p-1.5 rounded-full text-muted hover:bg-secondary-20/30 hover:text-accent transition-colors"
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
 
       {/* Right Section - Searchbar */}
-      <div class="flex-1 max-w-fit ml-4" style="-webkit-app-region: no-drag;">
+      <div class="flex items-center gap-3 flex-1 max-w-fit ml-4" style="-webkit-app-region: no-drag;">
         <Searchbar isTopBar={true} />
+        <Show when={downloadSpeed()}>
+          <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-xs font-medium text-accent">
+            <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            {downloadSpeed()}
+          </div>
+        </Show>
       </div>
 
       {/* Middle Section - Navigation Links */}
@@ -183,7 +233,14 @@ export default function Topbar() {
           class={`flex items-center gap-2 px-4 h-full transition-colors ${isActive("/downloads-page") ? "text-accent border-b-2 border-accent" : "text-muted hover:text-text"
             }`}
         >
-          <Download size={18} />
+          <div class="relative">
+            <Download size={18} />
+            <Show when={activeDownloadCount() > 0}>
+              <span class="absolute -top-2 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-accent text-background text-[10px] font-bold flex items-center justify-center leading-none">
+                {activeDownloadCount()}
+              </span>
+            </Show>
+          </div>
           <span class="font-medium">Downloads</span>
         </A>
 
