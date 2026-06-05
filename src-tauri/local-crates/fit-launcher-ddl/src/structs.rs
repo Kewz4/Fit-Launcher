@@ -4,7 +4,7 @@ use specta::Type;
 use std::sync::LazyLock;
 
 pub static FUCKINGFAST_DDL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"window\.open\(\"(https://fuckingfast.co/dl/[^"]*)\"\)"#).unwrap()
+    Regex::new(r#"window\.open\(\"(https://(?:dl\.)?fuckingfast\.co/dl/[^"]+)\""#).unwrap()
 });
 pub static FUCKINGFAST_SIZE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"Size:\s*([0-9\.]+)\s*([KMGTP]?B)"#).unwrap());
