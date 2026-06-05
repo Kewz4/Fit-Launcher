@@ -143,8 +143,6 @@ export default function Topbar() {
     });
 
     document.getElementById('titlebar-minimize')?.addEventListener('click', () => appWindow.minimize());
-    document.getElementById('titlebar-maximize')?.addEventListener('click', handleMaximize);
-    document.getElementById('titlebar-close')?.addEventListener('click', () => handleWindowClose());
 
     listen('network-failure', (event: Event<{ message: string }>) => {
       console.error(`Network failure: ${event.payload.message}`);
