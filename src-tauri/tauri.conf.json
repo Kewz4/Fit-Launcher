@@ -17,7 +17,7 @@
       "./icons/icon.icns",
       "./icons/icon.ico"
     ],
-    "createUpdaterArtifacts": "v1Compatible",
+    "createUpdaterArtifacts": false,
     "externalBin": [
       "binaries/aria2c",
       "binaries/FitLauncherService"
